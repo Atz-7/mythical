@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mythology Monk Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-kalam {
+            font-family: 'Kalam', cursive;
+        }
+        /* Monk Animation */
+        .monk-container {
+            position: relative;
+            width: 150px;
+            height: 200px;
+            margin: 20px auto;
+            animation: float 3s ease-in-out infinite;
+        }
+        .monk-head {
+            width: 70px;
+            height: 70px;
+            background-color: #f2d5b8; /* skin tone */
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            border: 3px solid #5c3d2e;
+        }
+        .monk-eye {
+            width: 8px;
+            height: 8px;
+            background-color: #5c3d2e;
+            border-radius: 50%;
+            position: absolute;
+            top: 30px;
+        }
+        .monk-eye.left { left: 20px; }
+        .monk-eye.right { right: 20px; }
+        .monk-mouth {
+            width: 20px;
+            height: 10px;
+            border: 2px solid #5c3d2e;
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+            position: absolute;
+            bottom: 20px;
+            left: 25px;
+        }
+        .monk-body {
+            width: 100px;
+            height: 120px;
+            background-color: #e59866; /* robe color */
+            border-radius: 50px 50px 20px 20px;
+            position: absolute;
+            top: 80px;
+            left: 25px;
+            border: 3px solid #5c3d2e;
+        }
+        .speech-bubble {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 2px solid #5c3d2e;
+            opacity: 0;
+            animation: fadeInOut 4s ease-in-out forwards;
+            white-space: nowrap;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid #5c3d2e;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; transform: translateY(10px) translateX(-50%); }
+            10%, 90% { opacity: 1; transform: translateY(0) translateX(-50%); }
+        }
+        
+        /* Quiz Styling */
+        .quiz-option {
+            transition: all 0.2s ease-in-out;
+        }
+        .quiz-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.1);
+        }
+        .correct {
+            background-color: #28a745 !important;
+            color: white !important;
+            border-color: #28a745 !important;
+        }
+        .incorrect {
+            background-color: #dc3545 !important;
+            color: white !important;
+            border-color: #dc3545 !important;
+        }
+        .disabled-options .quiz-option:not(.correct):not(.incorrect) {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-[#fdf6e3] min-h-screen flex items-center justify-center p-4">
+
+    <div id="quiz-container" class="w-full max-w-2xl bg-[#fbf1c7] text-[#665842] p-6 sm:p-8 rounded-2xl shadow-2xl border-4 border-[#d5bda0]">
+        
+        <!-- Monk Mascot -->
+        <div id="monk-animation" class="text-center">
+            <div class="monk-container">
+                <div class="monk-head">
+                    <div class="monk-eye left"></div>
+                    <div class="monk-eye right"></div>
+                    <div class="monk-mouth"></div>
+                </div>
+                <div class="monk-body"></div>
+                <div class="speech-bubble font-kalam text-lg">Hi Disciples!</div>
+            </div>
+        </div>
+
+        <!-- Quiz Content -->
+        <div id="quiz-content" class="hidden">
+            <div class="text-center mb-6">
+                <p id="question-counter" class="text-sm text-[#928374] mb-2"></p>
+                <h2 id="question-text" class="text-2xl font-bold text-[#5c3d2e]"></h2>
+            </div>
+
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <!-- Options will be injected here -->
+            </div>
+
+            <div id="feedback-container" class="text-center h-20">
+                 <p id="feedback-text" class="text-2xl font-bold font-kalam"></p>
+                 <p id="correct-answer-text" class="text-md mt-1"></p>
+            </div>
+           
+            <div class="flex justify-center mt-4">
+                <button id="next-button" class="hidden bg-[#d6994b] text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-[#b5833b] transition-colors duration-200">
+                    Next Question
+                </button>
+                 <button id="start-button" class="bg-[#d6994b] text-white font-bold py-3 px-8 rounded-lg shadow-md hover:bg-[#b5833b] transition-colors duration-200">
+                    Start Quiz
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            // 80% Hindu Mythology
+            {
+                question: "Who is the king of the Devas (gods) in Hindu mythology?",
+                options: ["Shiva", "Vishnu", "Indra", "Brahma"],
+                answer: "Indra"
+            },
+            {
+                question: "What is the primary weapon of Lord Shiva?",
+                options: ["Sudarshana Chakra", "Gada", "Vajra", "Trishula"],
+                answer: "Trishula"
+            },
+            {
+                question: "In the epic Ramayana, who was Rama's devoted brother that accompanied him into exile?",
+                options: ["Bharata", "Lakshmana", "Shatrughna", "Hanuman"],
+                answer: "Lakshmana"
+            },
+            {
+                question: "Lord Ganesha is revered as the remover of obstacles. He has the head of which animal?",
+                options: ["Lion", "Monkey", "Elephant", "Bull"],
+                answer: "Elephant"
+            },
+            {
+                question: "Who is the Hindu goddess of wealth, fortune, and prosperity?",
+                options: ["Saraswati", "Parvati", "Durga", "Lakshmi"],
+                answer: "Lakshmi"
+            },
+            {
+                question: "Which sage is credited with writing the epic Mahabharata?",
+                options: ["Valmiki", "Vyasa", "Narada", "Durvasa"],
+                answer: "Vyasa"
+            },
+            {
+                question: "What is the name of Lord Vishnu's celestial vehicle (vahana)?",
+                options: ["Nandi", "Airavata", "Garuda", "Shesha"],
+                answer: "Garuda"
+            },
+            {
+                question: "The sacred river Ganga is believed to have descended to Earth from the locks of which deity's hair?",
+                options: ["Brahma", "Vishnu", "Shiva", "Ganesha"],
+                answer: "Shiva"
+            },
+            // 20% Other Mythologies
+            {
+                question: "In Greek mythology, who is the king of the gods on Mount Olympus?",
+                options: ["Hades", "Poseidon", "Apollo", "Zeus"],
+                answer: "Zeus"
+            },
+            {
+                question: "According to Norse mythology, what is the name of Thor's mighty hammer?",
+                options: ["Gungnir", "Mjolnir", "Excalibur", "Skofnung"],
+                answer: "Mjolnir"
+            },
+            {
+                question: "In Egyptian mythology, who is the god of the afterlife, death, and resurrection?",
+                options: ["Ra", "Horus", "Anubis", "Thoth"],
+                answer: "Anubis"
+            },
+            {
+                question: "In Japanese mythology, who is the goddess of the sun and the universe?",
+                options: ["Izanami", "Tsukuyomi", "Amaterasu", "Susanoo"],
+                answer: "Amaterasu"
+            }
+        ];
+
+        // DOM Elements
+        const monkAnimationEl = document.getElementById('monk-animation');
+        const quizContentEl = document.getElementById('quiz-content');
+        const startButton = document.getElementById('start-button');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        const correctAnswerTextEl = document.getElementById('correct-answer-text');
+        const nextButton = document.getElementById('next-button');
+        const questionCounterEl = document.getElementById('question-counter');
+
+        let shuffledQuestions = [];
+        let currentQuestionIndex = 0;
+
+        // Event Listeners
+        startButton.addEventListener('click', startQuiz);
+        nextButton.addEventListener('click', setNextQuestion);
+        
+        // Hide quiz content and show monk intro on load
+        setTimeout(() => {
+            monkAnimationEl.classList.add('hidden');
+            quizContentEl.classList.remove('hidden');
+        }, 4000); // Monk animation lasts for 4 seconds
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            startButton.classList.add('hidden');
+            shuffledQuestions = shuffleArray([...quizData]);
+            currentQuestionIndex = 0;
+            setNextQuestion();
+        }
+
+        function setNextQuestion() {
+            resetState();
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                showQuestion(shuffledQuestions[currentQuestionIndex]);
+            } else {
+                showEndScreen();
+            }
+        }
+
+        function showQuestion(question) {
+            questionCounterEl.innerText = `Question ${currentQuestionIndex + 1} / ${shuffledQuestions.length}`;
+            questionTextEl.innerText = question.question;
+            question.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.classList.add('quiz-option', 'w-full', 'p-4', 'bg-[#faf3d8]', 'border-2', 'border-[#d5bda0]', 'rounded-lg', 'text-lg', 'font-semibold', 'hover:bg-[#f2e7c3]');
+                button.addEventListener('click', selectAnswer);
+                optionsContainerEl.appendChild(button);
+            });
+        }
+        
+        function resetState() {
+            feedbackTextEl.innerText = '';
+            correctAnswerTextEl.innerText = '';
+            nextButton.classList.add('hidden');
+            while (optionsContainerEl.firstChild) {
+                optionsContainerEl.removeChild(optionsContainerEl.firstChild);
+            }
+            optionsContainerEl.classList.remove('disabled-options');
+        }
+
+        function selectAnswer(e) {
+            const selectedButton = e.target;
+            const correctAnswer = shuffledQuestions[currentQuestionIndex].answer;
+            
+            optionsContainerEl.classList.add('disabled-options');
+
+            if (selectedButton.innerText === correctAnswer) {
+                feedbackTextEl.innerText = 'GOOD JOB MATE! PROCEED TO NEXT';
+                feedbackTextEl.style.color = '#28a745';
+                selectedButton.classList.add('correct');
+            } else {
+                feedbackTextEl.innerText = 'INCORRECT! GOOD LUCK FOR NEXT';
+                feedbackTextEl.style.color = '#dc3545';
+                selectedButton.classList.add('incorrect');
+            }
+            
+            correctAnswerTextEl.innerText = `Correct Answer: ${correctAnswer}`;
+            correctAnswerTextEl.classList.remove('hidden');
+
+            // Highlight the correct answer
+            Array.from(optionsContainerEl.children).forEach(button => {
+                if(button.innerText === correctAnswer) {
+                    button.classList.add('correct');
+                }
+            });
+
+            currentQuestionIndex++;
+            nextButton.classList.remove('hidden');
+        }
+
+        function showEndScreen() {
+             questionTextEl.innerText = "You've completed the quiz!";
+             questionCounterEl.innerText = "Well Done, Disciple!";
+             feedbackTextEl.innerText = "";
+             correctAnswerTextEl.innerText = "";
+             nextButton.classList.add('hidden');
+             startButton.innerText = "Play Again";
+             startButton.classList.remove('hidden');
+        }
+
+    </script>
+</body>
+</html>
